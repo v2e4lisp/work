@@ -1,37 +1,36 @@
 package work
 
+// Worker function that hanndles jobs
 type Worker func(input interface{}) (output interface{})
 
-func Start(w Worker, n int) (
-        in chan interface{},
-        out chan interface{},
-        exit chan struct{},
-        exited chan struct{}) {
-
-        in, out = make(chan interface{}), make(chan interface{})
-        exit, exited = make(chan struct{}), make(chan struct{})
+// Start working.
+//
+// w is the Worker function handling jobs.
+// n is the number of workers running at the same time.
+//
+// Jobs should be send to inbound channel. When all the jobs are sent,
+// close the inbound channel to tell workers that there is no job left.
+// Worker function's return value will be sent this channel. When all
+// the jobs are handled, it will get closed.
+func Start(w Worker, n int) (inbound chan<- interface{}, outbound <-chan interface{}) {
+        in, out := make(chan interface{}), make(chan interface{})
 
         go func() {
                 outstd := make(chan struct{}, n)
-                for {
-                        select {
-                        case job := <-in:
-                                outstd <- struct{}{}
-                                go func(job interface{}) {
-                                        out <- w(job)
-                                        <-outstd
-                                }(job)
-                        case <-exit:
-                                goto EXIT
-                        }
+                for job := range in {
+                        outstd <- struct{}{}
+                        go func(job interface{}) {
+                                out <- w(job)
+                                <-outstd
+                        }(job)
                 }
-        EXIT:
+
                 for i := 0; i < n; i++ {
                         outstd <- struct{}{}
                 }
                 close(outstd)
-                close(exited)
+                close(out)
         }()
 
-        return
+        return in, out
 }

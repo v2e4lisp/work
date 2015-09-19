@@ -22,7 +22,7 @@ func addOne(i interface{}) interface{} {
 
 func Example() {
         // handle two jobs at the same time
-        in, out, exit, exited := work.Start(addOne, 2)
+        in, out := work.Start(addOne, 2)
         var results []int
 
         go func() {
@@ -32,21 +32,12 @@ func Example() {
                 }
                 // We close the exit channel to inform the workers that
                 // there is no job left.
-                close(exit)
+                close(in)
         }()
 
-        for {
-                select {
-                case ret := <-out:
-                        // read from output channel
-                        results = append(results, ret.(int))
-                case <-exited:
-                        // When all jobs are handled,
-                        // exited channel will get closed.
-                        goto DONE
-                }
+        for ret := range out {
+                results = append(results, ret.(int))
         }
-DONE:
         sort.Ints(results)
         fmt.Println(results)
         // Output:
