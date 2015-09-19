@@ -10,8 +10,8 @@ type Worker func(input interface{}) (output interface{})
 //
 // Jobs should be send to inbound channel. When all the jobs are sent,
 // close the inbound channel to tell workers that there is no job left.
-// Worker function's return value will be sent this channel. When all
-// the jobs are handled, it will get closed.
+// Worker function's return value will be sent to the outbound channel.
+// When all the jobs are handled, it will get closed.
 func Start(w Worker, n int) (inbound chan<- interface{}, outbound <-chan interface{}) {
         in, out := make(chan interface{}), make(chan interface{})
 

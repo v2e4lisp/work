@@ -35,9 +35,11 @@ func Example() {
                 close(in)
         }()
 
+        // collecting the results
         for ret := range out {
                 results = append(results, ret.(int))
         }
+
         sort.Ints(results)
         fmt.Println(results)
         // Output:
