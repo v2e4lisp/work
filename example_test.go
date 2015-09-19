@@ -30,7 +30,7 @@ func Example() {
                 for i := 1; i < 10; i++ {
                         in <- i
                 }
-                // We close the exit channel to inform the workers that
+                // We close the inbound channel to inform the workers that
                 // there is no job left.
                 close(in)
         }()
